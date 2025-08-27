@@ -1,7 +1,6 @@
 ## Preview Seurat / Anndata objects ( `.rds` or `.h5ad` ) & large `.csv` files
 
 <aside>
-<img src="/icons/book_gray.svg" alt="/icons/book_gray.svg" width="40px" />
 
 > **Features:**
 > 

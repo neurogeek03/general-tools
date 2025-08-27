@@ -1,7 +1,6 @@
 ## Project folder setup & link to GitHub
 
 <aside>
-<img src="/icons/book_gray.svg" alt="/icons/book_gray.svg" width="40px" />
 
 > **Features:**
 > 
