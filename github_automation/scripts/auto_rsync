@@ -1,0 +1,28 @@
+#!/bin/bash
+# Hourly rsync of project scripts into GitHub repo
+# Usage: ./auto_rsync.sh /path/to/project /path/to/repo
+
+PROJECT_DIR="$1"
+REPO_DIR="$2"
+
+if [ -z "$PROJECT_DIR" ] || [ -z "$REPO_DIR" ]; then
+    echo "Usage: $0 /path/to/project /path/to/repo"
+    exit 1
+fi
+
+echo "Starting hourly rsync from $PROJECT_DIR to $REPO_DIR"
+
+while true; do
+    echo "🔄 $(date): Syncing scripts..."
+    
+    # Find all scripts folders and rsync
+    find "$PROJECT_DIR" -type d -name scripts | while read -r scripts_path; do
+        rel_path="${scripts_path#$PROJECT_DIR/}"
+        dest="$REPO_DIR/$rel_path"
+        mkdir -p "$dest"
+        rsync -av --delete "$scripts_path/" "$dest/"
+    done
+
+    echo "✅ $(date): Sync complete. Sleeping 1 hour..."
+    sleep 3600
+done

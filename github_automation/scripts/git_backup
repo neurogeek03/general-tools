@@ -1,0 +1,62 @@
+#!/bin/bash
+# Interactive Git backup script
+# Lists all repos under /scratch/mfafouti/Github/ and lets you choose one
+
+GITHUB_DIR="/scratch/mfafouti/Github"
+
+# Find all directories with a .git folder
+repos=()
+while IFS= read -r -d $'\0'; do
+    repos+=("$(basename "$REPLY")")
+done < <(find "$GITHUB_DIR" -maxdepth 1 -mindepth 1 -type d -exec test -d "{}/.git" \; -print0)
+
+# Check if any repos found
+if [ ${#repos[@]} -eq 0 ]; then
+    echo "No Git repos found in $GITHUB_DIR"
+    exit 1
+fi
+
+# Show menu
+echo "Select a repo to back up:"
+select repo in "${repos[@]}"; do
+    if [ -n "$repo" ]; then
+        echo "You selected: $repo"
+        REPO_PATH="$GITHUB_DIR/$repo"
+        break
+    else
+        echo "Invalid selection. Try again."
+    fi
+done
+
+# Navigate to repo
+cd "$REPO_PATH" || exit 1
+
+# Show git status
+git status
+
+# Stage all changes
+git add -A
+
+# Show staged changes
+echo "----------------------------------"
+git status
+
+# Setup GPG + SSH agent
+export GPG_TTY=$(tty)
+gpgconf --launch gpg-agent
+ssh-add ~/.ssh/id_ed25519 2>/dev/null
+
+# Ask for commit message
+echo "Enter commit message (or leave empty for default timestamp):"
+read commit_msg
+if [ -z "$commit_msg" ]; then
+    commit_msg="Auto-backup: $(date '+%Y-%m-%d %H:%M:%S')"
+fi
+
+# Commit with GPG signing
+git commit -S -m "$commit_msg" || echo "⚠️ Nothing to commit."
+
+# Push
+git push origin main
+
+

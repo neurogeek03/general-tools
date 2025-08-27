@@ -1,0 +1,40 @@
+#!/bin/bash -i
+# Usage: preview <file1> [file2 ... fileN]
+# Works for .h5ad, .rds, and .csv files
+
+if [ $# -lt 1 ]; then
+    echo "Usage: preview <file1> [file2 ... fileN]"
+    exit 1
+fi
+
+for FILE in "$@"; do
+    EXT="${FILE##*.}"
+    echo "Previewing $FILE (.$EXT)..."
+
+    n <<EOF
+    source ~/.bashrc
+
+    case "$EXT" in
+        h5ad)
+            conda activate anndata_env
+            python ~/preview/preview_anndata.py "$FILE"
+            ;;
+        rds)
+            conda activate seurat_env
+            Rscript ~/preview/preview_rds.R "$FILE"
+            ;;
+        csv)
+            conda activate anndata_env
+            python - <<PYTHON_EOF
+import pandas as pd
+df = pd.read_csv("$FILE")
+with pd.option_context('display.max_columns', None):
+    print(df.head(10))
+PYTHON_EOF
+            ;;
+        *)
+            echo "Unsupported file type: $EXT"
+            ;;
+    esac
+EOF
+done
